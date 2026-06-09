@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#2E7D32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="宿州蔬菜比价">
+<meta name="application-name" content="宿州蔬菜比价">
+<meta name="description" content="宿州5家超市30种蔬菜实时比价，哪家便宜一目了然">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>宿州蔬菜比价</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#F0F7F0;color:#333;overflow:hidden;height:100dvh;display:flex;flex-direction:column}
+:root{--green:#2E7D32;--green-light:#E8F5E9;--green-dark:#1B5E20;--orange:#FF6D00;--gold:#FFB300;--red:#D32F2F;--bg:#F0F7F0;--white:#fff;--gray:#757575}
+.header{background:var(--green);color:white;padding:12px 16px;text-align:center;flex-shrink:0;z-index:10}
+.header h1{font-size:20px;font-weight:bold}
+.header .sub{font-size:13px;opacity:.85;margin-top:2px}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px 14px;padding-bottom:8px}
+.tab-bar{display:flex;background:white;border-top:1px solid #E0E0E0;flex-shrink:0;position:sticky;bottom:0;z-index:20;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+.tab-item{flex:1;text-align:center;padding:8px 2px;cursor:pointer;transition:.15s;position:relative}
+.tab-item .tab-icon{font-size:22px;line-height:1.2}
+.tab-item .tab-label{font-size:11px;color:var(--gray);margin-top:1px}
+.tab-item.active .tab-label{color:var(--green);font-weight:bold}
+.tab-item.active:after{content:'';position:absolute;top:0;left:20%;right:20%;height:3px;background:var(--green);border-radius:0 0 3px 3px}
+.tab-item:active{opacity:.6}
+.card{background:white;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.card-title{font-size:17px;font-weight:bold;margin-bottom:8px}
+.btn{display:inline-block;padding:10px 20px;border-radius:8px;border:none;font-size:15px;font-weight:bold;cursor:pointer;text-align:center}
+.btn-green{background:var(--green);color:white}
+.btn-sm{padding:6px 14px;font-size:13px}
+.row{display:flex;align-items:center;padding:12px 10px;border-bottom:1px solid #f0f0f0;cursor:pointer;gap:8px}
+.row:last-child{border-bottom:none}
+.row:active{background:#f5f5f5}
+.veg-name{font-size:17px;font-weight:bold;flex:1}
+.veg-price{font-size:20px;font-weight:bold;color:var(--green);text-align:right}
+.veg-save{font-size:12px;color:var(--orange)}
+.sup-card{cursor:pointer}
+.sup-card:active{opacity:.7}
+.sup-name{font-size:17px;font-weight:bold}
+.sup-addr{font-size:12px;color:var(--gray);margin-top:2px}
+.sup-dist{font-size:13px;color:var(--orange);font-weight:bold}
+.sup-badge{background:#FFF8E1;color:#E65100;border-radius:4px;padding:2px 8px;font-size:12px;font-weight:bold}
+.matrix-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+.matrix-table{border-collapse:collapse;font-size:14px;min-width:100%}
+.matrix-table th{background:var(--green-dark);color:white;padding:8px 6px;font-size:13px;white-space:nowrap;position:sticky;top:0;z-index:2}
+.matrix-table td{padding:8px 6px;text-align:center;border-bottom:1px solid #eee;white-space:nowrap}
+.matrix-table tr:nth-child(even){background:#f9fff9}
+.matrix-table .best-cell{background:var(--green-light);font-weight:bold;color:var(--green)}
+.matrix-table .veg-row{cursor:pointer}
+.matrix-table .veg-row:active{background:#e8f5e9!important}
+.warn-row{border-left:4px solid var(--red);margin-bottom:8px}
+.warn-pct{font-size:22px;font-weight:bold;color:var(--red)}
+.loc-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.loc-row input{flex:1;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:15px;min-width:100px}
+.loc-row .btn{flex-shrink:0}
+.sup-detail-header{background:var(--green);color:white;padding:16px;border-radius:10px;margin-bottom:12px}
+.sup-detail-header .name{font-size:22px;font-weight:bold}
+.sup-detail-header .addr{font-size:14px;opacity:.85;margin-top:4px}
+.detail-row{display:flex;align-items:center;padding:10px;border-bottom:1px solid #f0f0f0;cursor:pointer;gap:8px}
+.detail-row:last-child{border:none}
+.detail-row:active{background:#f5f5f5}
+.detail-row.best{background:#E8F5E9;border-radius:8px;margin:4px 0;border:2px solid var(--gold)}
+.vdetail-price-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #eee;gap:8px}
+.vdetail-bar-bg{flex:1;height:36px;background:#f0f0f0;border-radius:6px;overflow:hidden;position:relative}
+.vdetail-bar-fill{height:100%;border-radius:6px}
+.vdetail-bar-label{position:absolute;top:0;left:8px;line-height:36px;font-size:14px;font-weight:bold;color:white;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+.vdetail-price{font-size:18px;font-weight:bold;width:80px;text-align:right;flex-shrink:0}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.top-bar{display:flex;align-items:center;gap:8px;padding:8px 0;margin-bottom:8px}
+.top-bar .back-btn{font-size:16px;color:var(--green);cursor:pointer;padding:4px 8px;border-radius:6px;font-weight:bold}
+.top-bar .title{font-size:18px;font-weight:bold;flex:1}
+.install-bar{background:#FFF8E1;border:2px solid #FFE082;border-radius:12px;padding:12px;margin-bottom:10px;display:none;align-items:center;justify-content:space-between}
+.install-bar.show{display:flex}
+.install-bar .text{font-size:14px;color:#E65100;font-weight:bold}
+.install-bar .btn-close{background:#E65100;color:white;border:none;border-radius:8px;padding:6px 14px;font-size:14px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="header" id="mainHeader">
+  <h1>🥬 宿州蔬菜比价</h1>
+  <div class="sub" id="headerSub"></div>
+</div>
+
+<div class="content" id="contentArea">
+  <div class="install-bar" id="installBar">
+    <span class="text">📱 添加到主屏幕，像APP一样用</span>
+    <button class="btn-close" id="installClose">知道了</button>
+  </div>
+  <div class="tab-panel active" id="panel-home"></div>
+  <div class="tab-panel" id="panel-compare"></div>
+  <div class="tab-panel" id="panel-markets"></div>
+  <div class="tab-panel" id="panel-warn"></div>
+  <div class="tab-panel" id="panel-sup-detail"></div>
+  <div class="tab-panel" id="panel-veg-detail"></div>
+</div>
+
+<div class="tab-bar" id="tabBar">
+  <div class="tab-item active" data-tab="home"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+  <div class="tab-item" data-tab="compare"><div class="tab-icon">📊</div><div class="tab-label">比价</div></div>
+  <div class="tab-item" data-tab="markets"><div class="tab-icon">🏪</div><div class="tab-label">超市</div></div>
+  <div class="tab-item" data-tab="warn"><div class="tab-icon">⚠️</div><div class="tab-label">预警</div></div>
+</div>
+
+<script>
+// ===== 注册 Service Worker（PWA 离线 + 安装到桌面） =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').then(function(reg) {
+      console.log('SW registered, scope:', reg.scope);
+    }, function(err) {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+
+// ===== 所有数据嵌入（兼容写法：只用 var / function） =====
+var SEED = {"s": [{"id": 1, "name": "大润发", "slug": "rt-mart", "area": "埇桥区", "sort_order": 1, "address": "汴河中路369号（华夏商场对面）", "lat": 33.6365, "lng": 116.9773}, {"id": 2, "name": "永辉超市", "slug": "yonghui", "area": "埇桥区", "sort_order": 2, "address": "人民路与银河二路交叉口·万达广场B1", "lat": 33.652, "lng": 116.9635}, {"id": 3, "name": "苏果超市", "slug": "suguo", "area": "埇桥区", "sort_order": 3, "address": "中山街246号", "lat": 33.6328, "lng": 116.983}, {"id": 4, "name": "联华超市", "slug": "lianhua", "area": "埇桥区", "sort_order": 4, "address": "胜利路573号", "lat": 33.642, "lng": 116.9715}, {"id": 5, "name": "合家福", "slug": "hejiafu", "area": "埇桥区", "sort_order": 5, "address": "淮海中路68号", "lat": 33.6385, "lng": 116.988}], "v": [{"vid": 23, "name": "鸡蛋", "best_price": 3.87, "best_sid": 4, "best_sup": "联华超市", "avg_price": 5.04, "save": 1.17, "save_pct": 23.2, "score": 27.2}, {"vid": 18, "name": "青椒", "best_price": 2.58, "best_sid": 5, "best_sup": "合家福", "avg_price": 3.34, "save": 0.76, "save_pct": 22.8, "score": 17.4}, {"vid": 25, "name": "西兰花", "best_price": 3.89, "best_sid": 5, "best_sup": "合家福", "avg_price": 4.61, "save": 0.72, "save_pct": 15.6, "score": 11.2}, {"vid": 8, "name": "香菜", "best_price": 4.07, "best_sid": 5, "best_sup": "合家福", "avg_price": 4.73, "save": 0.66, "save_pct": 13.9, "score": 9.2}, {"vid": 21, "name": "生姜", "best_price": 4.25, "best_sid": 1, "best_sup": "大润发", "avg_price": 4.9, "save": 0.65, "save_pct": 13.2, "score": 8.5}, {"vid": 26, "name": "洋葱", "best_price": 1.35, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 1.63, "save": 0.28, "save_pct": 17.0, "score": 4.7}, {"vid": 20, "name": "大蒜", "best_price": 3.84, "best_sid": 1, "best_sup": "大润发", "avg_price": 4.27, "save": 0.43, "save_pct": 10.2, "score": 4.4}, {"vid": 19, "name": "豆角", "best_price": 3.02, "best_sid": 5, "best_sup": "合家福", "avg_price": 3.38, "save": 0.36, "save_pct": 10.5, "score": 3.8}, {"vid": 4, "name": "生菜", "best_price": 1.86, "best_sid": 5, "best_sup": "合家福", "avg_price": 2.14, "save": 0.28, "save_pct": 13.0, "score": 3.6}, {"vid": 15, "name": "西红柿", "best_price": 2.45, "best_sid": 1, "best_sup": "大润发", "avg_price": 2.76, "save": 0.31, "save_pct": 11.2, "score": 3.5}, {"vid": 5, "name": "油麦菜", "best_price": 1.69, "best_sid": 4, "best_sup": "联华超市", "avg_price": 1.93, "save": 0.24, "save_pct": 12.5, "score": 3.0}, {"vid": 10, "name": "白萝卜", "best_price": 0.81, "best_sid": 1, "best_sup": "大润发", "avg_price": 0.98, "save": 0.17, "save_pct": 17.3, "score": 2.9}, {"vid": 14, "name": "莲藕", "best_price": 3.08, "best_sid": 3, "best_sup": "苏果超市", "avg_price": 3.39, "save": 0.31, "save_pct": 9.2, "score": 2.9}, {"vid": 22, "name": "大葱", "best_price": 1.66, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 1.89, "save": 0.23, "save_pct": 12.2, "score": 2.8}, {"vid": 24, "name": "花菜", "best_price": 2.13, "best_sid": 5, "best_sup": "合家福", "avg_price": 2.39, "save": 0.26, "save_pct": 10.9, "score": 2.8}, {"vid": 3, "name": "菠菜", "best_price": 2.56, "best_sid": 3, "best_sup": "苏果超市", "avg_price": 2.82, "save": 0.26, "save_pct": 9.2, "score": 2.4}, {"vid": 6, "name": "韭菜", "best_price": 2.26, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 2.5, "save": 0.24, "save_pct": 9.5, "score": 2.3}, {"vid": 2, "name": "上海青", "best_price": 1.36, "best_sid": 5, "best_sup": "合家福", "avg_price": 1.54, "save": 0.18, "save_pct": 11.8, "score": 2.1}, {"vid": 27, "name": "南瓜", "best_price": 1.2, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 1.36, "save": 0.16, "save_pct": 12.0, "score": 2.0}, {"vid": 17, "name": "茄子", "best_price": 2.3, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 2.51, "save": 0.21, "save_pct": 8.4, "score": 1.8}, {"vid": 13, "name": "山药", "best_price": 5.07, "best_sid": 3, "best_sup": "苏果超市", "avg_price": 5.34, "save": 0.27, "save_pct": 5.1, "score": 1.4}, {"vid": 28, "name": "冬瓜", "best_price": 0.85, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 0.96, "save": 0.11, "save_pct": 11.8, "score": 1.3}, {"vid": 12, "name": "红薯", "best_price": 2.14, "best_sid": 4, "best_sup": "联华超市", "avg_price": 2.32, "save": 0.18, "save_pct": 7.6, "score": 1.3}, {"vid": 11, "name": "胡萝卜", "best_price": 1.72, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 1.87, "save": 0.15, "save_pct": 8.2, "score": 1.3}, {"vid": 7, "name": "芹菜", "best_price": 1.72, "best_sid": 5, "best_sup": "合家福", "avg_price": 1.88, "save": 0.16, "save_pct": 8.4, "score": 1.3}, {"vid": 29, "name": "丝瓜", "best_price": 2.03, "best_sid": 3, "best_sup": "苏果超市", "avg_price": 2.19, "save": 0.16, "save_pct": 7.3, "score": 1.2}, {"vid": 1, "name": "大白菜", "best_price": 0.84, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 0.94, "save": 0.1, "save_pct": 11.0, "score": 1.1}, {"vid": 30, "name": "苦瓜", "best_price": 2.53, "best_sid": 4, "best_sup": "联华超市", "avg_price": 2.69, "save": 0.16, "save_pct": 6.1, "score": 1.0}, {"vid": 9, "name": "土豆", "best_price": 1.45, "best_sid": 2, "best_sup": "永辉超市", "avg_price": 1.56, "save": 0.11, "save_pct": 7.2, "score": 0.8}, {"vid": 16, "name": "黄瓜", "best_price": 1.83, "best_sid": 5, "best_sup": "合家福", "avg_price": 1.96, "save": 0.13, "save_pct": 6.4, "score": 0.8}], "m": [{"vid": 2, "name": "上海青", "prices": {"1": 1.66, "2": 1.77, "3": 1.38, "4": 1.54, "5": 1.36}}, {"vid": 29, "name": "丝瓜", "prices": {"1": 2.16, "2": 2.21, "3": 2.03, "4": 2.42, "5": 2.13}}, {"vid": 28, "name": "冬瓜", "prices": {"1": 0.98, "2": 0.85, "3": 1.06, "4": 1.06, "5": 0.87}}, {"vid": 27, "name": "南瓜", "prices": {"1": 1.3, "2": 1.2, "3": 1.54, "4": 1.57, "5": 1.21}}, {"vid": 9, "name": "土豆", "prices": {"1": 1.78, "2": 1.45, "3": 1.54, "4": 1.57, "5": 1.47}}, {"vid": 1, "name": "大白菜", "prices": {"1": 1.02, "2": 0.84, "3": 0.91, "4": 0.9, "5": 1.05}}, {"vid": 22, "name": "大葱", "prices": {"1": 1.96, "2": 1.66, "3": 1.84, "4": 1.85, "5": 2.14}}, {"vid": 20, "name": "大蒜", "prices": {"1": 3.84, "2": 4.57, "3": 4.01, "4": 4.54, "5": 4.41}}, {"vid": 13, "name": "山药", "prices": {"1": 5.71, "2": 5.19, "3": 5.07, "4": 5.26, "5": 5.49}}, {"vid": 5, "name": "油麦菜", "prices": {"1": 2.05, "2": 1.99, "3": 1.79, "4": 1.69, "5": 2.14}}, {"vid": 26, "name": "洋葱", "prices": {"1": 1.5, "2": 1.35, "3": 1.78, "4": 1.76, "5": 1.74}}, {"vid": 21, "name": "生姜", "prices": {"1": 4.25, "2": 5.31, "3": 5.25, "4": 5.04, "5": 4.63}}, {"vid": 4, "name": "生菜", "prices": {"1": 2.21, "2": 2.0, "3": 2.24, "4": 2.38, "5": 1.86}}, {"vid": 10, "name": "白萝卜", "prices": {"1": 0.81, "2": 1.51, "3": 0.82, "4": 0.92, "5": 0.84}}, {"vid": 12, "name": "红薯", "prices": {"1": 2.46, "2": 2.15, "3": 2.54, "4": 2.14, "5": 2.29}}, {"vid": 11, "name": "胡萝卜", "prices": {"1": 1.81, "2": 1.72, "3": 1.75, "4": 2.13, "5": 1.96}}, {"vid": 24, "name": "花菜", "prices": {"1": 2.64, "2": 2.24, "3": 2.48, "4": 2.46, "5": 2.13}}, {"vid": 7, "name": "芹菜", "prices": {"1": 1.94, "2": 1.9, "3": 1.8, "4": 2.03, "5": 1.72}}, {"vid": 30, "name": "苦瓜", "prices": {"1": 2.54, "2": 2.81, "3": 2.97, "4": 2.53, "5": 2.62}}, {"vid": 17, "name": "茄子", "prices": {"1": 2.53, "2": 2.3, "3": 2.54, "4": 2.78, "5": 2.41}}, {"vid": 14, "name": "莲藕", "prices": {"1": 3.88, "2": 3.29, "3": 3.08, "4": 3.38, "5": 3.33}}, {"vid": 3, "name": "菠菜", "prices": {"1": 2.73, "2": 2.98, "3": 2.56, "4": 2.71, "5": 3.11}}, {"vid": 25, "name": "西兰花", "prices": {"1": 4.94, "2": 4.63, "3": 4.96, "4": 4.62, "5": 3.89}}, {"vid": 15, "name": "西红柿", "prices": {"1": 2.45, "2": 3.04, "3": 2.98, "4": 2.53, "5": 2.8}}, {"vid": 19, "name": "豆角", "prices": {"1": 3.07, "2": 3.61, "3": 3.78, "4": 3.4, "5": 3.02}}, {"vid": 18, "name": "青椒", "prices": {"1": 2.73, "2": 3.42, "3": 5.37, "4": 2.61, "5": 2.58}}, {"vid": 6, "name": "韭菜", "prices": {"1": 2.45, "2": 2.26, "3": 2.27, "4": 2.85, "5": 2.66}}, {"vid": 8, "name": "香菜", "prices": {"1": 6.67, "2": 4.37, "3": 4.12, "4": 4.41, "5": 4.07}}, {"vid": 23, "name": "鸡蛋", "prices": {"1": 4.76, "2": 3.98, "3": 4.28, "4": 3.87, "5": 8.32}}, {"vid": 16, "name": "黄瓜", "prices": {"1": 1.92, "2": 2.23, "3": 1.96, "4": 1.84, "5": 1.83}}], "ms": [{"id": 1, "name": "大润发"}, {"id": 2, "name": "永辉超市"}, {"id": 3, "name": "苏果超市"}, {"id": 4, "name": "联华超市"}, {"id": 5, "name": "合家福"}], "w": [{"vid": 23, "name": "鸡蛋", "sid": 5, "sup": "合家福", "price": 8.32, "avg": 5.04, "over_pct": 65.0}, {"vid": 18, "name": "青椒", "sid": 3, "sup": "苏果超市", "price": 5.37, "avg": 3.34, "over_pct": 60.7}, {"vid": 10, "name": "白萝卜", "sid": 2, "sup": "永辉超市", "price": 1.51, "avg": 0.98, "over_pct": 54.1}, {"vid": 8, "name": "香菜", "sid": 1, "sup": "大润发", "price": 6.67, "avg": 4.73, "over_pct": 41.1}], "sd": {"1": {"supermarket": {"id": 1, "name": "大润发", "slug": "rt-mart", "area": "埇桥区", "sort_order": 1, "address": "汴河中路369号（华夏商场对面）", "lat": 33.6365, "lng": 116.9773}, "items": [{"vid": 2, "name": "上海青", "price": 1.66, "avg_price": 1.54, "is_best": false}, {"vid": 29, "name": "丝瓜", "price": 2.16, "avg_price": 2.19, "is_best": false}, {"vid": 28, "name": "冬瓜", "price": 0.98, "avg_price": 0.96, "is_best": false}, {"vid": 27, "name": "南瓜", "price": 1.3, "avg_price": 1.36, "is_best": false}, {"vid": 9, "name": "土豆", "price": 1.78, "avg_price": 1.56, "is_best": false}, {"vid": 1, "name": "大白菜", "price": 1.02, "avg_price": 0.94, "is_best": false}, {"vid": 22, "name": "大葱", "price": 1.96, "avg_price": 1.89, "is_best": false}, {"vid": 20, "name": "大蒜", "price": 3.84, "avg_price": 4.27, "is_best": true}, {"vid": 13, "name": "山药", "price": 5.71, "avg_price": 5.34, "is_best": false}, {"vid": 5, "name": "油麦菜", "price": 2.05, "avg_price": 1.93, "is_best": false}, {"vid": 26, "name": "洋葱", "price": 1.5, "avg_price": 1.63, "is_best": false}, {"vid": 21, "name": "生姜", "price": 4.25, "avg_price": 4.9, "is_best": true}, {"vid": 4, "name": "生菜", "price": 2.21, "avg_price": 2.14, "is_best": false}, {"vid": 10, "name": "白萝卜", "price": 0.81, "avg_price": 0.98, "is_best": true}, {"vid": 12, "name": "红薯", "price": 2.46, "avg_price": 2.32, "is_best": false}, {"vid": 11, "name": "胡萝卜", "price": 1.81, "avg_price": 1.87, "is_best": false}, {"vid": 24, "name": "花菜", "price": 2.64, "avg_price": 2.39, "is_best": false}, {"vid": 7, "name": "芹菜", "price": 1.94, "avg_price": 1.88, "is_best": false}, {"vid": 30, "name": "苦瓜", "price": 2.54, "avg_price": 2.69, "is_best": false}, {"vid": 17, "name": "茄子", "price": 2.53, "avg_price": 2.51, "is_best": false}, {"vid": 14, "name": "莲藕", "price": 3.88, "avg_price": 3.39, "is_best": false}, {"vid": 3, "name": "菠菜", "price": 2.73, "avg_price": 2.82, "is_best": false}, {"vid": 25, "name": "西兰花", "price": 4.94, "avg_price": 4.61, "is_best": false}, {"vid": 15, "name": "西红柿", "price": 2.45, "avg_price": 2.76, "is_best": true}, {"vid": 19, "name": "豆角", "price": 3.07, "avg_price": 3.38, "is_best": false}, {"vid": 18, "name": "青椒", "price": 2.73, "avg_price": 3.34, "is_best": false}, {"vid": 6, "name": "韭菜", "price": 2.45, "avg_price": 2.5, "is_best": false}, {"vid": 8, "name": "香菜", "price": 6.67, "avg_price": 4.73, "is_best": false}, {"vid": 23, "name": "鸡蛋", "price": 4.76, "avg_price": 5.04, "is_best": false}, {"vid": 16, "name": "黄瓜", "price": 1.92, "avg_price": 1.96, "is_best": false}]}, "2": {"supermarket": {"id": 2, "name": "永辉超市", "slug": "yonghui", "area": "埇桥区", "sort_order": 2, "address": "人民路与银河二路交叉口·万达广场B1", "lat": 33.652, "lng": 116.9635}, "items": [{"vid": 2, "name": "上海青", "price": 1.77, "avg_price": 1.54, "is_best": false}, {"vid": 29, "name": "丝瓜", "price": 2.21, "avg_price": 2.19, "is_best": false}, {"vid": 28, "name": "冬瓜", "price": 0.85, "avg_price": 0.96, "is_best": true}, {"vid": 27, "name": "南瓜", "price": 1.2, "avg_price": 1.36, "is_best": true}, {"vid": 9, "name": "土豆", "price": 1.45, "avg_price": 1.56, "is_best": true}, {"vid": 1, "name": "大白菜", "price": 0.84, "avg_price": 0.94, "is_best": true}, {"vid": 22, "name": "大葱", "price": 1.66, "avg_price": 1.89, "is_best": true}, {"vid": 20, "name": "大蒜", "price": 4.57, "avg_price": 4.27, "is_best": false}, {"vid": 13, "name": "山药", "price": 5.19, "avg_price": 5.34, "is_best": false}, {"vid": 5, "name": "油麦菜", "price": 1.99, "avg_price": 1.93, "is_best": false}, {"vid": 26, "name": "洋葱", "price": 1.35, "avg_price": 1.63, "is_best": true}, {"vid": 21, "name": "生姜", "price": 5.31, "avg_price": 4.9, "is_best": false}, {"vid": 4, "name": "生菜", "price": 2.0, "avg_price": 2.14, "is_best": false}, {"vid": 10, "name": "白萝卜", "price": 1.51, "avg_price": 0.98, "is_best": false}, {"vid": 12, "name": "红薯", "price": 2.15, "avg_price": 2.32, "is_best": false}, {"vid": 11, "name": "胡萝卜", "price": 1.72, "avg_price": 1.87, "is_best": true}, {"vid": 24, "name": "花菜", "price": 2.24, "avg_price": 2.39, "is_best": false}, {"vid": 7, "name": "芹菜", "price": 1.9, "avg_price": 1.88, "is_best": false}, {"vid": 30, "name": "苦瓜", "price": 2.81, "avg_price": 2.69, "is_best": false}, {"vid": 17, "name": "茄子", "price": 2.3, "avg_price": 2.51, "is_best": true}, {"vid": 14, "name": "莲藕", "price": 3.29, "avg_price": 3.39, "is_best": false}, {"vid": 3, "name": "菠菜", "price": 2.98, "avg_price": 2.82, "is_best": false}, {"vid": 25, "name": "西兰花", "price": 4.63, "avg_price": 4.61, "is_best": false}, {"vid": 15, "name": "西红柿", "price": 3.04, "avg_price": 2.76, "is_best": false}, {"vid": 19, "name": "豆角", "price": 3.61, "avg_price": 3.38, "is_best": false}, {"vid": 18, "name": "青椒", "price": 3.42, "avg_price": 3.34, "is_best": false}, {"vid": 6, "name": "韭菜", "price": 2.26, "avg_price": 2.5, "is_best": true}, {"vid": 8, "name": "香菜", "price": 4.37, "avg_price": 4.73, "is_best": false}, {"vid": 23, "name": "鸡蛋", "price": 3.98, "avg_price": 5.04, "is_best": false}, {"vid": 16, "name": "黄瓜", "price": 2.23, "avg_price": 1.96, "is_best": false}]}, "3": {"supermarket": {"id": 3, "name": "苏果超市", "slug": "suguo", "area": "埇桥区", "sort_order": 3, "address": "中山街246号", "lat": 33.6328, "lng": 116.983}, "items": [{"vid": 2, "name": "上海青", "price": 1.38, "avg_price": 1.54, "is_best": false}, {"vid": 29, "name": "丝瓜", "price": 2.03, "avg_price": 2.19, "is_best": true}, {"vid": 28, "name": "冬瓜", "price": 1.06, "avg_price": 0.96, "is_best": false}, {"vid": 27, "name": "南瓜", "price": 1.54, "avg_price": 1.36, "is_best": false}, {"vid": 9, "name": "土豆", "price": 1.54, "avg_price": 1.56, "is_best": false}, {"vid": 1, "name": "大白菜", "price": 0.91, "avg_price": 0.94, "is_best": false}, {"vid": 22, "name": "大葱", "price": 1.84, "avg_price": 1.89, "is_best": false}, {"vid": 20, "name": "大蒜", "price": 4.01, "avg_price": 4.27, "is_best": false}, {"vid": 13, "name": "山药", "price": 5.07, "avg_price": 5.34, "is_best": true}, {"vid": 5, "name": "油麦菜", "price": 1.79, "avg_price": 1.93, "is_best": false}, {"vid": 26, "name": "洋葱", "price": 1.78, "avg_price": 1.63, "is_best": false}, {"vid": 21, "name": "生姜", "price": 5.25, "avg_price": 4.9, "is_best": false}, {"vid": 4, "name": "生菜", "price": 2.24, "avg_price": 2.14, "is_best": false}, {"vid": 10, "name": "白萝卜", "price": 0.82, "avg_price": 0.98, "is_best": false}, {"vid": 12, "name": "红薯", "price": 2.54, "avg_price": 2.32, "is_best": false}, {"vid": 11, "name": "胡萝卜", "price": 1.75, "avg_price": 1.87, "is_best": false}, {"vid": 24, "name": "花菜", "price": 2.48, "avg_price": 2.39, "is_best": false}, {"vid": 7, "name": "芹菜", "price": 1.8, "avg_price": 1.88, "is_best": false}, {"vid": 30, "name": "苦瓜", "price": 2.97, "avg_price": 2.69, "is_best": false}, {"vid": 17, "name": "茄子", "price": 2.54, "avg_price": 2.51, "is_best": false}, {"vid": 14, "name": "莲藕", "price": 3.08, "avg_price": 3.39, "is_best": true}, {"vid": 3, "name": "菠菜", "price": 2.56, "avg_price": 2.82, "is_best": true}, {"vid": 25, "name": "西兰花", "price": 4.96, "avg_price": 4.61, "is_best": false}, {"vid": 15, "name": "西红柿", "price": 2.98, "avg_price": 2.76, "is_best": false}, {"vid": 19, "name": "豆角", "price": 3.78, "avg_price": 3.38, "is_best": false}, {"vid": 18, "name": "青椒", "price": 5.37, "avg_price": 3.34, "is_best": false}, {"vid": 6, "name": "韭菜", "price": 2.27, "avg_price": 2.5, "is_best": false}, {"vid": 8, "name": "香菜", "price": 4.12, "avg_price": 4.73, "is_best": false}, {"vid": 23, "name": "鸡蛋", "price": 4.28, "avg_price": 5.04, "is_best": false}, {"vid": 16, "name": "黄瓜", "price": 1.96, "avg_price": 1.96, "is_best": false}]}, "4": {"supermarket": {"id": 4, "name": "联华超市", "slug": "lianhua", "area": "埇桥区", "sort_order": 4, "address": "胜利路573号", "lat": 33.642, "lng": 116.9715}, "items": [{"vid": 2, "name": "上海青", "price": 1.54, "avg_price": 1.54, "is_best": false}, {"vid": 29, "name": "丝瓜", "price": 2.42, "avg_price": 2.19, "is_best": false}, {"vid": 28, "name": "冬瓜", "price": 1.06, "avg_price": 0.96, "is_best": false}, {"vid": 27, "name": "南瓜", "price": 1.57, "avg_price": 1.36, "is_best": false}, {"vid": 9, "name": "土豆", "price": 1.57, "avg_price": 1.56, "is_best": false}, {"vid": 1, "name": "大白菜", "price": 0.9, "avg_price": 0.94, "is_best": false}, {"vid": 22, "name": "大葱", "price": 1.85, "avg_price": 1.89, "is_best": false}, {"vid": 20, "name": "大蒜", "price": 4.54, "avg_price": 4.27, "is_best": false}, {"vid": 13, "name": "山药", "price": 5.26, "avg_price": 5.34, "is_best": false}, {"vid": 5, "name": "油麦菜", "price": 1.69, "avg_price": 1.93, "is_best": true}, {"vid": 26, "name": "洋葱", "price": 1.76, "avg_price": 1.63, "is_best": false}, {"vid": 21, "name": "生姜", "price": 5.04, "avg_price": 4.9, "is_best": false}, {"vid": 4, "name": "生菜", "price": 2.38, "avg_price": 2.14, "is_best": false}, {"vid": 10, "name": "白萝卜", "price": 0.92, "avg_price": 0.98, "is_best": false}, {"vid": 12, "name": "红薯", "price": 2.14, "avg_price": 2.32, "is_best": true}, {"vid": 11, "name": "胡萝卜", "price": 2.13, "avg_price": 1.87, "is_best": false}, {"vid": 24, "name": "花菜", "price": 2.46, "avg_price": 2.39, "is_best": false}, {"vid": 7, "name": "芹菜", "price": 2.03, "avg_price": 1.88, "is_best": false}, {"vid": 30, "name": "苦瓜", "price": 2.53, "avg_price": 2.69, "is_best": true}, {"vid": 17, "name": "茄子", "price": 2.78, "avg_price": 2.51, "is_best": false}, {"vid": 14, "name": "莲藕", "price": 3.38, "avg_price": 3.39, "is_best": false}, {"vid": 3, "name": "菠菜", "price": 2.71, "avg_price": 2.82, "is_best": false}, {"vid": 25, "name": "西兰花", "price": 4.62, "avg_price": 4.61, "is_best": false}, {"vid": 15, "name": "西红柿", "price": 2.53, "avg_price": 2.76, "is_best": false}, {"vid": 19, "name": "豆角", "price": 3.4, "avg_price": 3.38, "is_best": false}, {"vid": 18, "name": "青椒", "price": 2.61, "avg_price": 3.34, "is_best": false}, {"vid": 6, "name": "韭菜", "price": 2.85, "avg_price": 2.5, "is_best": false}, {"vid": 8, "name": "香菜", "price": 4.41, "avg_price": 4.73, "is_best": false}, {"vid": 23, "name": "鸡蛋", "price": 3.87, "avg_price": 5.04, "is_best": true}, {"vid": 16, "name": "黄瓜", "price": 1.84, "avg_price": 1.96, "is_best": false}]}, "5": {"supermarket": {"id": 5, "name": "合家福", "slug": "hejiafu", "area": "埇桥区", "sort_order": 5, "address": "淮海中路68号", "lat": 33.6385, "lng": 116.988}, "items": [{"vid": 2, "name": "上海青", "price": 1.36, "avg_price": 1.54, "is_best": true}, {"vid": 29, "name": "丝瓜", "price": 2.13, "avg_price": 2.19, "is_best": false}, {"vid": 28, "name": "冬瓜", "price": 0.87, "avg_price": 0.96, "is_best": false}, {"vid": 27, "name": "南瓜", "price": 1.21, "avg_price": 1.36, "is_best": false}, {"vid": 9, "name": "土豆", "price": 1.47, "avg_price": 1.56, "is_best": false}, {"vid": 1, "name": "大白菜", "price": 1.05, "avg_price": 0.94, "is_best": false}, {"vid": 22, "name": "大葱", "price": 2.14, "avg_price": 1.89, "is_best": false}, {"vid": 20, "name": "大蒜", "price": 4.41, "avg_price": 4.27, "is_best": false}, {"vid": 13, "name": "山药", "price": 5.49, "avg_price": 5.34, "is_best": false}, {"vid": 5, "name": "油麦菜", "price": 2.14, "avg_price": 1.93, "is_best": false}, {"vid": 26, "name": "洋葱", "price": 1.74, "avg_price": 1.63, "is_best": false}, {"vid": 21, "name": "生姜", "price": 4.63, "avg_price": 4.9, "is_best": false}, {"vid": 4, "name": "生菜", "price": 1.86, "avg_price": 2.14, "is_best": true}, {"vid": 10, "name": "白萝卜", "price": 0.84, "avg_price": 0.98, "is_best": false}, {"vid": 12, "name": "红薯", "price": 2.29, "avg_price": 2.32, "is_best": false}, {"vid": 11, "name": "胡萝卜", "price": 1.96, "avg_price": 1.87, "is_best": false}, {"vid": 24, "name": "花菜", "price": 2.13, "avg_price": 2.39, "is_best": true}, {"vid": 7, "name": "芹菜", "price": 1.72, "avg_price": 1.88, "is_best": true}, {"vid": 30, "name": "苦瓜", "price": 2.62, "avg_price": 2.69, "is_best": false}, {"vid": 17, "name": "茄子", "price": 2.41, "avg_price": 2.51, "is_best": false}, {"vid": 14, "name": "莲藕", "price": 3.33, "avg_price": 3.39, "is_best": false}, {"vid": 3, "name": "菠菜", "price": 3.11, "avg_price": 2.82, "is_best": false}, {"vid": 25, "name": "西兰花", "price": 3.89, "avg_price": 4.61, "is_best": true}, {"vid": 15, "name": "西红柿", "price": 2.8, "avg_price": 2.76, "is_best": false}, {"vid": 19, "name": "豆角", "price": 3.02, "avg_price": 3.38, "is_best": true}, {"vid": 18, "name": "青椒", "price": 2.58, "avg_price": 3.34, "is_best": true}, {"vid": 6, "name": "韭菜", "price": 2.66, "avg_price": 2.5, "is_best": false}, {"vid": 8, "name": "香菜", "price": 4.07, "avg_price": 4.73, "is_best": true}, {"vid": 23, "name": "鸡蛋", "price": 8.32, "avg_price": 5.04, "is_best": false}, {"vid": 16, "name": "黄瓜", "price": 1.83, "avg_price": 1.96, "is_best": true}]}}, "vd": {"2": [{"sid": 5, "sup": "合家福", "price": 1.36}, {"sid": 3, "sup": "苏果超市", "price": 1.38}, {"sid": 4, "sup": "联华超市", "price": 1.54}, {"sid": 1, "sup": "大润发", "price": 1.66}, {"sid": 2, "sup": "永辉超市", "price": 1.77}], "29": [{"sid": 3, "sup": "苏果超市", "price": 2.03}, {"sid": 5, "sup": "合家福", "price": 2.13}, {"sid": 1, "sup": "大润发", "price": 2.16}, {"sid": 2, "sup": "永辉超市", "price": 2.21}, {"sid": 4, "sup": "联华超市", "price": 2.42}], "28": [{"sid": 2, "sup": "永辉超市", "price": 0.85}, {"sid": 5, "sup": "合家福", "price": 0.87}, {"sid": 1, "sup": "大润发", "price": 0.98}, {"sid": 3, "sup": "苏果超市", "price": 1.06}, {"sid": 4, "sup": "联华超市", "price": 1.06}], "27": [{"sid": 2, "sup": "永辉超市", "price": 1.2}, {"sid": 5, "sup": "合家福", "price": 1.21}, {"sid": 1, "sup": "大润发", "price": 1.3}, {"sid": 3, "sup": "苏果超市", "price": 1.54}, {"sid": 4, "sup": "联华超市", "price": 1.57}], "9": [{"sid": 2, "sup": "永辉超市", "price": 1.45}, {"sid": 5, "sup": "合家福", "price": 1.47}, {"sid": 3, "sup": "苏果超市", "price": 1.54}, {"sid": 4, "sup": "联华超市", "price": 1.57}, {"sid": 1, "sup": "大润发", "price": 1.78}], "1": [{"sid": 2, "sup": "永辉超市", "price": 0.84}, {"sid": 4, "sup": "联华超市", "price": 0.9}, {"sid": 3, "sup": "苏果超市", "price": 0.91}, {"sid": 1, "sup": "大润发", "price": 1.02}, {"sid": 5, "sup": "合家福", "price": 1.05}], "22": [{"sid": 2, "sup": "永辉超市", "price": 1.66}, {"sid": 3, "sup": "苏果超市", "price": 1.84}, {"sid": 4, "sup": "联华超市", "price": 1.85}, {"sid": 1, "sup": "大润发", "price": 1.96}, {"sid": 5, "sup": "合家福", "price": 2.14}], "20": [{"sid": 1, "sup": "大润发", "price": 3.84}, {"sid": 3, "sup": "苏果超市", "price": 4.01}, {"sid": 5, "sup": "合家福", "price": 4.41}, {"sid": 4, "sup": "联华超市", "price": 4.54}, {"sid": 2, "sup": "永辉超市", "price": 4.57}], "13": [{"sid": 3, "sup": "苏果超市", "price": 5.07}, {"sid": 2, "sup": "永辉超市", "price": 5.19}, {"sid": 4, "sup": "联华超市", "price": 5.26}, {"sid": 5, "sup": "合家福", "price": 5.49}, {"sid": 1, "sup": "大润发", "price": 5.71}], "5": [{"sid": 4, "sup": "联华超市", "price": 1.69}, {"sid": 3, "sup": "苏果超市", "price": 1.79}, {"sid": 2, "sup": "永辉超市", "price": 1.99}, {"sid": 1, "sup": "大润发", "price": 2.05}, {"sid": 5, "sup": "合家福", "price": 2.14}], "26": [{"sid": 2, "sup": "永辉超市", "price": 1.35}, {"sid": 1, "sup": "大润发", "price": 1.5}, {"sid": 5, "sup": "合家福", "price": 1.74}, {"sid": 4, "sup": "联华超市", "price": 1.76}, {"sid": 3, "sup": "苏果超市", "price": 1.78}], "21": [{"sid": 1, "sup": "大润发", "price": 4.25}, {"sid": 5, "sup": "合家福", "price": 4.63}, {"sid": 4, "sup": "联华超市", "price": 5.04}, {"sid": 3, "sup": "苏果超市", "price": 5.25}, {"sid": 2, "sup": "永辉超市", "price": 5.31}], "4": [{"sid": 5, "sup": "合家福", "price": 1.86}, {"sid": 2, "sup": "永辉超市", "price": 2.0}, {"sid": 1, "sup": "大润发", "price": 2.21}, {"sid": 3, "sup": "苏果超市", "price": 2.24}, {"sid": 4, "sup": "联华超市", "price": 2.38}], "10": [{"sid": 1, "sup": "大润发", "price": 0.81}, {"sid": 3, "sup": "苏果超市", "price": 0.82}, {"sid": 5, "sup": "合家福", "price": 0.84}, {"sid": 4, "sup": "联华超市", "price": 0.92}, {"sid": 2, "sup": "永辉超市", "price": 1.51}], "12": [{"sid": 4, "sup": "联华超市", "price": 2.14}, {"sid": 2, "sup": "永辉超市", "price": 2.15}, {"sid": 5, "sup": "合家福", "price": 2.29}, {"sid": 1, "sup": "大润发", "price": 2.46}, {"sid": 3, "sup": "苏果超市", "price": 2.54}], "11": [{"sid": 2, "sup": "永辉超市", "price": 1.72}, {"sid": 3, "sup": "苏果超市", "price": 1.75}, {"sid": 1, "sup": "大润发", "price": 1.81}, {"sid": 5, "sup": "合家福", "price": 1.96}, {"sid": 4, "sup": "联华超市", "price": 2.13}], "24": [{"sid": 5, "sup": "合家福", "price": 2.13}, {"sid": 2, "sup": "永辉超市", "price": 2.24}, {"sid": 4, "sup": "联华超市", "price": 2.46}, {"sid": 3, "sup": "苏果超市", "price": 2.48}, {"sid": 1, "sup": "大润发", "price": 2.64}], "7": [{"sid": 5, "sup": "合家福", "price": 1.72}, {"sid": 3, "sup": "苏果超市", "price": 1.8}, {"sid": 2, "sup": "永辉超市", "price": 1.9}, {"sid": 1, "sup": "大润发", "price": 1.94}, {"sid": 4, "sup": "联华超市", "price": 2.03}], "30": [{"sid": 4, "sup": "联华超市", "price": 2.53}, {"sid": 1, "sup": "大润发", "price": 2.54}, {"sid": 5, "sup": "合家福", "price": 2.62}, {"sid": 2, "sup": "永辉超市", "price": 2.81}, {"sid": 3, "sup": "苏果超市", "price": 2.97}], "17": [{"sid": 2, "sup": "永辉超市", "price": 2.3}, {"sid": 5, "sup": "合家福", "price": 2.41}, {"sid": 1, "sup": "大润发", "price": 2.53}, {"sid": 3, "sup": "苏果超市", "price": 2.54}, {"sid": 4, "sup": "联华超市", "price": 2.78}], "14": [{"sid": 3, "sup": "苏果超市", "price": 3.08}, {"sid": 2, "sup": "永辉超市", "price": 3.29}, {"sid": 5, "sup": "合家福", "price": 3.33}, {"sid": 4, "sup": "联华超市", "price": 3.38}, {"sid": 1, "sup": "大润发", "price": 3.88}], "3": [{"sid": 3, "sup": "苏果超市", "price": 2.56}, {"sid": 4, "sup": "联华超市", "price": 2.71}, {"sid": 1, "sup": "大润发", "price": 2.73}, {"sid": 2, "sup": "永辉超市", "price": 2.98}, {"sid": 5, "sup": "合家福", "price": 3.11}], "25": [{"sid": 5, "sup": "合家福", "price": 3.89}, {"sid": 4, "sup": "联华超市", "price": 4.62}, {"sid": 2, "sup": "永辉超市", "price": 4.63}, {"sid": 1, "sup": "大润发", "price": 4.94}, {"sid": 3, "sup": "苏果超市", "price": 4.96}], "15": [{"sid": 1, "sup": "大润发", "price": 2.45}, {"sid": 4, "sup": "联华超市", "price": 2.53}, {"sid": 5, "sup": "合家福", "price": 2.8}, {"sid": 3, "sup": "苏果超市", "price": 2.98}, {"sid": 2, "sup": "永辉超市", "price": 3.04}], "19": [{"sid": 5, "sup": "合家福", "price": 3.02}, {"sid": 1, "sup": "大润发", "price": 3.07}, {"sid": 4, "sup": "联华超市", "price": 3.4}, {"sid": 2, "sup": "永辉超市", "price": 3.61}, {"sid": 3, "sup": "苏果超市", "price": 3.78}], "18": [{"sid": 5, "sup": "合家福", "price": 2.58}, {"sid": 4, "sup": "联华超市", "price": 2.61}, {"sid": 1, "sup": "大润发", "price": 2.73}, {"sid": 2, "sup": "永辉超市", "price": 3.42}, {"sid": 3, "sup": "苏果超市", "price": 5.37}], "6": [{"sid": 2, "sup": "永辉超市", "price": 2.26}, {"sid": 3, "sup": "苏果超市", "price": 2.27}, {"sid": 1, "sup": "大润发", "price": 2.45}, {"sid": 5, "sup": "合家福", "price": 2.66}, {"sid": 4, "sup": "联华超市", "price": 2.85}], "8": [{"sid": 5, "sup": "合家福", "price": 4.07}, {"sid": 3, "sup": "苏果超市", "price": 4.12}, {"sid": 2, "sup": "永辉超市", "price": 4.37}, {"sid": 4, "sup": "联华超市", "price": 4.41}, {"sid": 1, "sup": "大润发", "price": 6.67}], "23": [{"sid": 4, "sup": "联华超市", "price": 3.87}, {"sid": 2, "sup": "永辉超市", "price": 3.98}, {"sid": 3, "sup": "苏果超市", "price": 4.28}, {"sid": 1, "sup": "大润发", "price": 4.76}, {"sid": 5, "sup": "合家福", "price": 8.32}], "16": [{"sid": 5, "sup": "合家福", "price": 1.83}, {"sid": 4, "sup": "联华超市", "price": 1.84}, {"sid": 1, "sup": "大润发", "price": 1.92}, {"sid": 3, "sup": "苏果超市", "price": 1.96}, {"sid": 2, "sup": "永辉超市", "price": 2.23}]}};
+
+var sups = SEED.s;
+var vegs = SEED.v;
+var matrix = SEED.m;
+var matrixSups = SEED.ms;
+var warns = SEED.w;
+var supDetails = SEED.sd;
+var vegDetails = SEED.vd;
+
+// ===== 启动提示 =====
+try {
+  var ib = document.getElementById('installBar');
+  if (!window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
+    if (!localStorage.getItem('ib_h')) {
+      setTimeout(function(){ ib.className = 'install-bar show'; }, 1500);
+    }
+  }
+  document.getElementById('installClose').onclick = function(){
+    ib.className = 'install-bar';
+    localStorage.setItem('ib_h', '1');
+  };
+} catch(e){}
+
+document.getElementById('headerSub').textContent = vegs.length + '种蔬菜 · ' + sups.length + '家超市';
+
+// ===== Tab 切换 =====
+var tabs = document.querySelectorAll('.tab-item');
+for (var ti = 0; ti < tabs.length; ti++) {
+  tabs[ti].onclick = function(){
+    var allTabs = document.querySelectorAll('.tab-item');
+    var allPanels = document.querySelectorAll('.tab-panel');
+    for (var i = 0; i < allTabs.length; i++) { allTabs[i].className = 'tab-item'; }
+    for (var i = 0; i < allPanels.length; i++) { allPanels[i].className = 'tab-panel'; }
+    this.className = 'tab-item active';
+    var tabName = this.getAttribute('data-tab');
+    document.getElementById('panel-' + tabName).className = 'tab-panel active';
+    document.getElementById('mainHeader').style.display = 'block';
+    if (tabName === 'home') { renderHome(); }
+    else if (tabName === 'compare') { renderCompare(); }
+    else if (tabName === 'markets') { renderMarkets(); }
+    else if (tabName === 'warn') { renderWarnings(); }
+  };
+}
+
+function showTab(name) {
+  var t = document.querySelector('.tab-item[data-tab="' + name + '"]');
+  if (t) { t.click(); }
+}
+
+function calcDist(lat1, lng1, lat2, lng2) {
+  var dlat = (lat1 - lat2) * 111.32;
+  var dlng = (lng1 - lng2) * 111.32 * 0.832;
+  return Math.sqrt(dlat*dlat + dlng*dlng);
+}
+
+// ===== 首页 =====
+function renderHome() {
+  var c = document.getElementById('panel-home');
+  var known = {"宿州市政府":[33.646,116.976],"宿州":[33.646,116.976],"埇桥区":[33.640,116.970],"万达广场":[33.652,116.963],"华夏商场":[33.636,116.977]};
+  var inp = document.getElementById('locInput');
+  var place = inp ? inp.value : '宿州市政府';
+  var coords = known[place] || [33.646, 116.976];
+
+  var html = '<div class="card"><div class="card-title">📍 我的位置</div>' +
+    '<div class="loc-row"><input type="text" id="locInput" value="' + place + '" placeholder="输入地名">' +
+    '<button class="btn btn-green btn-sm" onclick="updateLocation()">刷新距离</button></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px" id="supDistances">';
+
+  for (var i = 0; i < sups.length; i++) {
+    var s = sups[i];
+    var d = calcDist(coords[0], coords[1], s.lat, s.lng);
+    html += '<div class="sup-card" style="background:white;border-radius:8px;padding:8px 12px;flex:1;min-width:100px;border:1px solid #e0e0e0" onclick="showSupDetail('+s.id+')">' +
+      '<div class="sup-name">'+s.name+'</div><div class="sup-dist">'+d.toFixed(1)+' km</div>' +
+      '<div class="sup-addr" style="font-size:11px">'+(s.address||'')+'</div></div>';
+  }
+  html += '</div></div>';
+
+  html += '<div class="card"><div class="card-title">🔥 最划算排行</div>';
+  if (vegs.length === 0) {
+    html += '<div class="empty-state" style="padding:30px;text-align:center;color:var(--gray)">暂无数据</div>';
+  } else {
+    var medals = ['🥇','🥈','🥉'];
+    var maxVeg = vegs.length < 30 ? vegs.length : 30;
+    for (var i = 0; i < maxVeg; i++) {
+      var rd = vegs[i];
+      var medal = i < 3 ? medals[i] : '#'+(i+1);
+      var bcolor = i===0?'#FFD700':i===1?'#C0C0C0':i===2?'#CD7F32':'transparent';
+      html += '<div class="row" onclick="showVegDetail('+rd.vid+')" style="border-left:3px solid '+bcolor+';border-radius:4px">' +
+        '<div style="width:30px;text-align:center;font-size:16px">'+medal+'</div>' +
+        '<div class="veg-name">'+rd.name+'</div>' +
+        '<div style="text-align:right"><div class="veg-price">¥'+rd.best_price.toFixed(2)+'/斤</div>' +
+        '<div class="veg-save">省¥'+rd.save.toFixed(2)+' · '+rd.save_pct+'%</div></div></div>';
+    }
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function updateLocation() {
+  var inp = document.getElementById('locInput');
+  if (!inp) return;
+  var known = {"宿州市政府":[33.646,116.976],"宿州":[33.646,116.976],"埇桥区":[33.640,116.970],"万达广场":[33.652,116.963],"华夏商场":[33.636,116.977]};
+  var coords = known[inp.value.trim()] || [33.646, 116.976];
+  var container = document.getElementById('supDistances');
+  if (!container) return;
+  var html = '';
+  for (var i = 0; i < sups.length; i++) {
+    var s = sups[i];
+    var d = calcDist(coords[0], coords[1], s.lat, s.lng);
+    html += '<div class="sup-card" style="background:white;border-radius:8px;padding:8px 12px;flex:1;min-width:100px;border:1px solid #e0e0e0" onclick="showSupDetail('+s.id+')">' +
+      '<div class="sup-name">'+s.name+'</div><div class="sup-dist">'+d.toFixed(1)+' km</div>' +
+      '<div class="sup-addr" style="font-size:11px">'+(s.address||'')+'</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+// ===== 比价总表 =====
+function renderCompare() {
+  var c = document.getElementById('panel-compare');
+  if (matrix.length === 0) { c.innerHTML = '<div style="padding:30px;text-align:center;color:var(--gray)">暂无数据</div>'; return; }
+
+  var html = '<div class="card" style="padding:8px"><div class="card-title" style="font-size:16px;margin-bottom:6px">📊 全部蔬菜价格总表</div>' +
+    '<div class="matrix-wrap"><table class="matrix-table"><thead><tr><th style="position:sticky;left:0;z-index:3;background:var(--green-dark)">蔬菜</th>';
+  for (var i = 0; i < matrixSups.length; i++) {
+    html += '<th>'+matrixSups[i].name.slice(0,3)+'</th>';
+  }
+  html += '<th style="background:#E65100">最低价</th></tr></thead><tbody>';
+
+  for (var i = 0; i < matrix.length; i++) {
+    var rd = matrix[i];
+    var prices = rd.prices || {};
+    var keys = [];
+    for (var k in prices) { if (prices.hasOwnProperty(k) && prices[k] != null) { keys.push(k); } }
+    if (keys.length === 0) continue;
+    var bestSid = parseInt(keys[0]);
+    var bestPrice = prices[keys[0]];
+    for (var j = 1; j < keys.length; j++) {
+      if (prices[keys[j]] < bestPrice) { bestPrice = prices[keys[j]]; bestSid = parseInt(keys[j]); }
+    }
+    var bestSupName = '';
+    for (var j = 0; j < matrixSups.length; j++) { if (matrixSups[j].id === bestSid) { bestSupName = matrixSups[j].name; break; } }
+
+    html += '<tr class="veg-row" onclick="showVegDetail('+rd.vid+')">' +
+      '<td style="position:sticky;left:0;z-index:1;background:white;font-weight:bold;text-align:left">'+rd.name+'</td>';
+    for (var j = 0; j < matrixSups.length; j++) {
+      var p = prices[matrixSups[j].id];
+      html += '<td'+(matrixSups[j].id===bestSid?' class="best-cell"':'')+'>'+(p!=null?'¥'+p.toFixed(2):'--')+'</td>';
+    }
+    html += '<td style="background:#FFF8E1;font-weight:bold;color:var(--green)">¥'+bestPrice.toFixed(2)+'<br><span style="font-size:11px;color:var(--gray)">'+bestSupName+'</span></td></tr>';
+  }
+  html += '</tbody></table></div></div>' +
+    '<div style="text-align:center;font-size:12px;color:var(--gray);padding:4px">绿色标记 = 该超市是最低价 · 点击行查看详情</div>';
+  c.innerHTML = html;
+}
+
+// ===== 超市列表 =====
+function renderMarkets() {
+  var c = document.getElementById('panel-markets');
+  var html = '<div class="card"><div class="card-title">🏪 选择超市查看价格</div>';
+  for (var i = 0; i < sups.length; i++) {
+    var s = sups[i];
+    var bestCount = 0;
+    for (var j = 0; j < vegs.length; j++) { if (vegs[j].best_sid === s.id) { bestCount++; } }
+    html += '<div class="sup-card" style="background:white;border:1px solid #e0e0e0;border-radius:10px;padding:14px;margin:8px 0" onclick="showSupDetail('+s.id+')">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<div><div class="sup-name" style="font-size:18px">'+s.name+'</div>' +
+      '<div class="sup-addr" style="font-size:13px;margin-top:4px">'+(s.address||s.area)+'</div></div>' +
+      '<div style="text-align:right"><div class="sup-badge" style="display:inline-block">'+bestCount+'种最低价</div></div></div></div>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+// ===== 预警 =====
+function renderWarnings() {
+  var c = document.getElementById('panel-warn');
+  if (warns.length === 0) {
+    c.innerHTML = '<div class="card" style="text-align:center;padding:30px">' +
+      '<div style="font-size:48px;margin-bottom:10px">✅</div>' +
+      '<div style="font-size:20px;font-weight:bold;color:var(--green)">当前所有价格正常</div>' +
+      '<div style="font-size:15px;color:var(--gray);margin-top:6px">没有高于均价20%的异常报价</div></div>';
+    return;
+  }
+  var html = '<div class="card"><div class="card-title" style="color:var(--red)">⚠️ 发现 '+warns.length+' 条异常高价</div>' +
+    '<div style="font-size:13px;color:var(--gray);margin-bottom:8px">高于该菜各超市均价 20% 即预警</div>';
+  for (var i = 0; i < warns.length; i++) {
+    var w = warns[i];
+    html += '<div class="warn-row card" onclick="showVegDetail('+w.vid+')" style="cursor:pointer;margin-bottom:8px">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+      '<div><div style="font-size:17px;font-weight:bold">'+w.name+'</div>' +
+      '<div style="font-size:14px;color:var(--gray)">@ '+w.sup+'</div></div>' +
+      '<div style="text-align:right"><div class="warn-pct">↑ '+w.over_pct+'%</div>' +
+      '<div style="font-size:14px;color:var(--red)">¥'+w.price.toFixed(2)+
+      '<span style="font-size:12px;color:var(--gray)"> / 均价¥'+w.avg.toFixed(2)+'</span></div></div></div></div>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+// ===== 超市详情 =====
+function showSupDetail(sid) {
+  document.getElementById('mainHeader').style.display = 'none';
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i = 0; i < panels.length; i++) { panels[i].className = 'tab-panel'; }
+  var panel = document.getElementById('panel-sup-detail');
+  panel.className = 'tab-panel active';
+  var data = supDetails['' + sid];
+  if (!data) { panel.innerHTML = '<div class="error-state" style="padding:30px;text-align:center;color:var(--red)">❌ 数据不存在</div>'; return; }
+  var sup = data.supermarket || {};
+  var items = data.items || [];
+  var html = '<div class="top-bar"><span class="back-btn" onclick="showTab(\'markets\')">‹ 返回</span>' +
+    '<span class="title">'+sup.name+'</span></div>' +
+    '<div class="sup-detail-header"><div class="name">'+sup.name+'</div>' +
+    '<div class="addr">'+(sup.address||sup.area||'')+'</div></div>';
+  if (items.length === 0) {
+    html += '<div style="padding:30px;text-align:center;color:var(--gray)">暂无报价</div>';
+  } else {
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      var cls = it.is_best ? 'detail-row best' : 'detail-row';
+      var priceColor = it.is_best ? 'var(--green)' : '#333';
+      html += '<div class="'+cls+'" onclick="showVegDetail('+it.vid+')">' +
+        '<div style="flex:1"><span style="font-size:16px;font-weight:bold">'+it.name+'</span>' +
+        '<div style="font-size:12px;color:var(--gray)">均价 ¥'+it.avg_price.toFixed(2)+'/斤</div></div>' +
+        '<div style="text-align:right"><div style="font-size:18px;font-weight:bold;color:'+priceColor+'">¥'+(it.price||0).toFixed(2)+'</div>' +
+        (it.is_best ? '<div style="font-size:12px;color:var(--green);font-weight:bold">★ 全城最低</div>' : '')+'</div></div>';
+    }
+  }
+  panel.innerHTML = html;
+}
+
+// ===== 蔬菜详情 =====
+function showVegDetail(vid) {
+  document.getElementById('mainHeader').style.display = 'none';
+  var panels = document.querySelectorAll('.tab-panel');
+  for (var i = 0; i < panels.length; i++) { panels[i].className = 'tab-panel'; }
+  var panel = document.getElementById('panel-veg-detail');
+  panel.className = 'tab-panel active';
+
+  var prices = vegDetails['' + vid] || [];
+  var name = '';
+  for (var i = 0; i < vegs.length; i++) { if (vegs[i].vid === vid) { name = vegs[i].name; break; } }
+  if (prices.length === 0) { panel.innerHTML = '<div style="padding:30px;text-align:center;color:var(--red)">❌ 无数据</div>'; return; }
+
+  var maxPrice = 0.01;
+  var sum = 0;
+  for (var i = 0; i < prices.length; i++) { if (prices[i].price > maxPrice) maxPrice = prices[i].price; sum += prices[i].price; }
+  var avg = sum / prices.length;
+
+  var html = '<div class="top-bar"><span class="back-btn" onclick="goBack()">‹ 返回</span>' +
+    '<span class="title">'+name+'</span></div>' +
+    '<div class="card" style="text-align:center;background:var(--green);color:white">' +
+    '<div style="font-size:36px;font-weight:bold">¥'+prices[0].price.toFixed(2)+'</div>' +
+    '<div style="font-size:14px">全城最低价 · 均价 ¥'+avg.toFixed(2)+'</div></div>';
+
+  if (prices.length >= 2) {
+    var cheap = prices[0], expen = prices[prices.length-1];
+    var diff = expen.price - cheap.price;
+    if (diff > 0.01) {
+      html += '<div class="card" style="background:#FFF8E1;border:2px solid #FFE082">' +
+        '<div style="font-size:16px;font-weight:bold;color:#E65100">省钱小贴士</div>' +
+        '<div style="font-size:14px;margin-top:4px">买'+name+'去「'+cheap.sup+'」比「'+expen.sup+'」便宜 <b>¥'+diff.toFixed(2)+'/斤</b></div></div>';
+    }
+  }
+
+  for (var i = 0; i < prices.length; i++) {
+    var p = prices[i];
+    var ratio = p.price / maxPrice;
+    var isBest = (i === 0);
+    var color = isBest ? 'var(--green)' : (i === prices.length-1 ? 'var(--orange)' : '#66BB6A');
+    html += '<div class="vdetail-price-row">' +
+      '<div style="width:70px;flex-shrink:0;font-weight:'+(isBest?'bold':'normal')+';color:'+(isBest?'var(--green)':'#333')+'">'+p.sup+'</div>' +
+      '<div class="vdetail-bar-bg"><div class="vdetail-bar-fill" style="width:'+Math.max(ratio*100,4)+'%;background:'+color+'"></div>' +
+      '<div class="vdetail-bar-label">'+(ratio>=0.15?'¥'+p.price.toFixed(2):'')+'</div></div>' +
+      '<div class="vdetail-price" style="color:'+(isBest?'var(--green)':'#333')+'">'+(ratio<0.15?'¥'+p.price.toFixed(2):'')+'</div></div>';
+    if (isBest) { html += '<div style="text-align:center;margin:-4px 0 6px;font-size:13px;font-weight:bold;color:var(--green)">★ 最低价</div>'; }
+  }
+  panel.innerHTML = html;
+}
+
+function goBack() { showTab('compare'); }
+
+// ===== 启动 =====
+renderHome();
+</script>
+</body>
+</html>
